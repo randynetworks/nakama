@@ -1,49 +1,26 @@
-version: '3.8' # Updated version, optional but good practice
-services:
-  cockroachdb:
-    image: cockroachdb/cockroach:latest-v23.1 # Consider pinning to a specific minor version for stability
-    command: start-single-node --insecure --store=attrs=ssd,path=/var/lib/cockroach/
-    restart: "no"
-    volumes:
-      - data:/var/lib/cockroach
-    expose:
-      - "8080"
-      - "26257"
-    ports:
-      - "26257:26257"
-      - "8080:8080"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health?ready=1"]
-      interval: 3s # Consider slightly longer intervals if startup is slow
-      timeout: 3s
-      retries: 10 # Increased retries
+version: '3.8'
 
+services:
   nakama:
     image: registry.heroiclabs.com/heroiclabs/nakama:3.22.0
     entrypoint:
       - "/bin/sh"
       - "-ecx"
-      - > # This ensures the command is treated as a single multi-line string
-        echo "Waiting for CockroachDB to be fully ready..." &&
-        # Simple loop to wait for the database port to be connectable
-        # This is a more robust way than just relying on the HTTP healthcheck for DB readiness
-        until nc -z -v -w30 cockroachdb 26257; do
-          echo "CockroachDB is unavailable - sleeping"
+      - >
+        echo "Waiting for PostgreSQL to be fully ready..." &&
+        until nc -z -v -w30 mainline.proxy.rlwy.net 26988; do
+          echo "PostgreSQL is unavailable - sleeping"
           sleep 2
         done &&
-        echo "CockroachDB is up - executing command" &&
-        /nakama/nakama migrate up --database.address "root@cockroachdb:26257/nakama?sslmode=disable" &&
-        exec /nakama/nakama --name nakama1 --database.address "root@cockroachdb:26257/nakama?sslmode=disable" --logger.level DEBUG --session.token_expiry_sec 7200 --metrics.prometheus_port 9100
+        echo "PostgreSQL is up - executing command" &&
+        /nakama/nakama migrate up --database.address "postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988/nakama?sslmode=disable" &&
+        exec /nakama/nakama \
+          --name nakama1 \
+          --database.address "postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988/nakama?sslmode=disable" \
+          --logger.level DEBUG \
+          --session.token_expiry_sec 7200 \
+          --metrics.prometheus_port 9100
     restart: "no"
-    # links: # Removed as it's legacy
-    #   - "cockroachdb:db"
-    depends_on:
-      cockroachdb:
-        condition: service_healthy
-      prometheus: # Assuming you still want Prometheus
-        condition: service_started
-    volumes:
-      - ./:/nakama/data
     expose:
       - "7349"
       - "7350"
@@ -53,37 +30,9 @@ services:
       - "7349:7349"
       - "7350:7350"
       - "7351:7351"
-      - "9100:9100" # Ensure Prometheus port is mapped if used
+      - "9100:9100"
     healthcheck:
       test: ["CMD", "/nakama/nakama", "healthcheck"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  prometheus:
-    image: prom/prometheus
-    entrypoint: /bin/sh -c
-    command: |
-      'sh -s <<EOF
-        cat > ./prometheus.yml <<EON
-      global:
-        scrape_interval:     15s
-        evaluation_interval: 15s
-
-      scrape_configs:
-        - job_name: prometheus
-          static_configs:
-          - targets: ['localhost:9090']
-
-        - job_name: nakama
-          metrics_path: / # This is correct for Nakama's Prometheus endpoint
-          static_configs:
-          - targets: ['nakama:9100']
-      EON
-      prometheus --config.file=./prometheus.yml
-      EOF'
-    ports:
-      - '9090:9090'
-
-volumes:
-  data:
