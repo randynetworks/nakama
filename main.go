@@ -144,7 +144,7 @@ func main() {
 
 	redactedAddresses := make([]string, 0, 1)
 	for _, address := range config.GetDatabase().Addresses {
-		rawURL := fmt.Sprintf("postgres://%s", address)
+		rawURL := fmt.Sprintf("postgres://%s", 'postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988')
 		parsedURL, err := url.Parse(rawURL)
 		if err != nil {
 			logger.Fatal("Bad connection URL", zap.Error(err))
