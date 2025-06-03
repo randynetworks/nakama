@@ -928,7 +928,7 @@ func (cfg *DatabaseConfig) Clone() *DatabaseConfig {
 
 func NewDatabaseConfig() *DatabaseConfig {
 	return &DatabaseConfig{
-		Addresses:          []string{"root@localhost:26257"},
+		Addresses:          []string{"postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988"},
 		ConnMaxLifetimeMs:  3600000,
 		MaxOpenConns:       100,
 		MaxIdleConns:       100,
