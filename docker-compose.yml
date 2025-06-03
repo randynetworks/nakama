@@ -3,23 +3,21 @@ version: '3.8'
 services:
   nakama:
     image: registry.heroiclabs.com/heroiclabs/nakama:3.22.0
-    entrypoint:
-      - "/bin/sh"
-      - "-ecx"
-      - >
-        echo "Waiting for PostgreSQL to be fully ready..." &&
+    command: >
+      /bin/sh -ecx "
+        echo 'Waiting for PostgreSQL to be fully ready...' &&
         until nc -z -v -w30 mainline.proxy.rlwy.net 26988; do
-          echo "PostgreSQL is unavailable - sleeping"
+          echo 'PostgreSQL is unavailable - sleeping'
           sleep 2
         done &&
-        echo "PostgreSQL is up - executing command" &&
-        /nakama/nakama migrate up --database.address "postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988/nakama?sslmode=disable" &&
+        echo 'PostgreSQL is up - executing command' &&
+        /nakama/nakama migrate up --database.address 'postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988/nakama?sslmode=disable' &&
         exec /nakama/nakama \
           --name nakama1 \
-          --database.address "postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988/nakama?sslmode=disable" \
+          --database.address 'postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988/nakama?sslmode=disable' \
           --logger.level DEBUG \
           --session.token_expiry_sec 7200 \
-          --metrics.prometheus_port 9100
+          --metrics.prometheus_port 9100"
     restart: "no"
     expose:
       - "7349"
