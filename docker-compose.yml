@@ -5,17 +5,12 @@ services:
     image: registry.heroiclabs.com/heroiclabs/nakama:3.22.0
     command: >
       /bin/sh -ecx "
-        echo 'Waiting for PostgreSQL on Railway...' &&
-        until nc -z -v -w30 mainline.proxy.rlwy.net 26988; do
-          echo 'PostgreSQL is unavailable - sleeping'
-          sleep 2
-        done &&
         echo 'PostgreSQL is up - running migration...' &&
-        /nakama migrate up --database.address 'postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988/nakama?sslmode=disable' &&
+        /nakama migrate up --database.address 'postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988/nakama?sslmode=enable' &&
         echo 'Migration done - starting Nakama...' &&
         exec /nakama \
           --name nakama1 \
-          --database.address 'postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988/nakama?sslmode=disable' \
+          --database.address 'postgres:uWTTOIwydwlnjINhpeKYvfSAhyVtVugW@mainline.proxy.rlwy.net:26988/nakama?sslmode=enable' \
           --logger.level DEBUG \
           --session.token_expiry_sec 7200 \
           --metrics.prometheus_port 9100"
